@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator - Mehdi's Cafe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #222222; /* Dark gray background */
+        }
+        .press-start-font {
+            font-family: 'Press Start 2P', cursive;
+        }
+        .form-section {
+            background-color: #FFFFFF; /* White background for form */
+        }
+        .heading {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #FFFFFF; /* White text to contrast with dark background */
+        }
+        .sub-heading {
+            font-size: 24px;
+            line-height: 1.4;
+            color: #FFFFFF; /* White text for Mehdi's Cafe */
+        }
+        .form-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #000000;
+        }
+        .form-input {
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            padding: 10px;
+            width: 100%;
+            font-size: 14px;
+            color: #000000;
+            background-color: #FFFFFF;
+        }
+        .form-input::placeholder {
+            color: #9CA3AF; /* Gray placeholder text */
+        }
+        .black-button {
+            background-color: #000000;
+            color: #FFFFFF;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            width: 100%;
+        }
+        .black-button:hover {
+            background-color: #333333;
+        }
+        .qr-preview {
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVR4Xu2NMQ4AIAwDiRSu8f+/3TABA4OeuZsvCwmFAlVVVW3fS6RSqVSqqt+9AQB0v0S4L9eNAAAAAElFTkSuQmCC');
+            min-height: 200px;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Style the DPI slider to be black */
+        #dpi {
+            -webkit-appearance: none; /* Remove default styling */
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #000000; /* Black track */
+            border-radius: 5px;
+            outline: none;
+        }
+        #dpi::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #000000; /* Black thumb */
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #FFFFFF; /* White border for contrast */
+        }
+        #dpi::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #000000; /* Black thumb for Firefox */
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #FFFFFF;
+        }
+        /* Style for color selectors on the same line */
+        .color-selectors {
+            display: flex;
+            gap: 16px; /* Space between the two color pickers */
+        }
+        .color-selector {
+            flex: 1; /* Each color picker takes equal space */
+        }
+    </style>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col items-center py-12 px-6">
+    <!-- Main Content -->
+    <div class="flex flex-col lg:flex-row items-center justify-center space-y-8 lg:space-y-0 lg:space-x-12">
+        <!-- Left Column: Mehdi's Cafe, Image, and Headline -->
+        <div class="flex-1 max-w-lg text-center lg:text-left">
+            <h1 class="text-4xl press-start-font sub-heading mb-4">Mehdi's Cafe</h1>
+            <div class="mb-6">
+                <img src="/static/cafecup.png" alt="Mehdi's Cafe Image" class="w-full h-auto">
+            </div>
+            <h2 class="heading">Generate your QR code, effortlessly for free.</h2>
+        </div>
+
+        <!-- Right Column: QR Code Generator Form -->
+        <div class="flex-1 max-w-lg form-section p-8 rounded-lg shadow-lg">
+            <h3 class="text-2xl font-bold mb-6">QR Code Generator</h3>
+            {% if error %}
+            <p class="text-red-500 mb-4">{{ error }}</p>
+            {% endif %}
+            <div class="mb-4">
+                <label for="qr_data" class="form-label block mb-1">Text or URL *</label>
+                <input type="text" id="qr_data" name="qr_data" class="form-input" placeholder="Type text or URL">
+            </div>
+            <div class="mb-4">
+                <label for="dpi" class="form-label block mb-1">DPI (300–600)</label>
+                <input type="range" id="dpi" name="dpi" min="300" max="600" value="300" class="w-full">
+                <span id="dpi_value" class="text-sm text-gray-600">300 DPI</span>
+            </div>
+            <div class="mb-4 color-selectors">
+                <div class="color-selector">
+                    <label for="fg_color" class="form-label block mb-1">QR Code Color</label>
+                    <input type="color" id="fg_color" name="fg_color" value="#000000" class="form-input h-10">
+                </div>
+                <div class="color-selector">
+                    <label for="bg_color" class="form-label block mb-1">Background Color</label>
+                    <input type="color" id="bg_color" name="bg_color" value="#FFFFFF" class="form-input h-10">
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label block mb-1">Preview</label>
+                <div id="qr_preview" class="qr-preview">
+                    <img id="qrCode" class="hidden max-w-full h-auto" alt="QR Code">
+                </div>
+            </div>
+            <button onclick="downloadQRCode()" class="black-button">Download QR Code</button>
+        </div>
+    </div>
+
+    <script>
+        console.log('Script loaded');
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        const updateQRPreview = debounce(function() {
+            const qrDataInput = document.getElementById('qr_data');
+            const qrData = qrDataInput ? qrDataInput.value : '';
+            const dpi = document.getElementById('dpi').value;
+            const fgColor = document.getElementById('fg_color').value;
+            const bgColor = document.getElementById('bg_color').value;
+            const qrCodeImg = document.getElementById('qrCode');
+
+            console.log('updateQRPreview:', { qrData, dpi, fgColor, bgColor });
+
+            if (!qrData || !qrData.trim()) {
+                console.log('No QR data, hiding preview');
+                qrCodeImg.classList.add('hidden');
+                return;
+            }
+
+            const body = `qr_data=${encodeURIComponent(qrData)}&dpi=${dpi}&fg_color=${encodeURIComponent(fgColor)}&bg_color=${encodeURIComponent(bgColor)}`;
+            console.log('Request body:', body);
+
+            fetch('/preview', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body
+            })
+            .then(response => {
+                console.log('Preview response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Preview response data:', data);
+                if (data.error) {
+                    console.log('Server error:', data.error);
+                    qrCodeImg.classList.add('hidden');
+                    alert(data.error);
+                    return;
+                }
+                qrCodeImg.src = data.image;
+                console.log('Setting image src:', data.image);
+                qrCodeImg.classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                qrCodeImg.classList.add('hidden');
+                alert('Error generating QR code');
+            });
+        }, 300);
+
+        function downloadQRCode() {
+            const qrData = document.getElementById('qr_data').value;
+            const dpi = document.getElementById('dpi').value;
+            const fgColor = document.getElementById('fg_color').value;
+            const bgColor = document.getElementById('bg_color').value;
+
+            console.log('downloadQRCode:', { qrData, dpi, fgColor, bgColor });
+
+            if (!qrData || !qrData.trim()) {
+                console.log('No QR data for download');
+                alert('Please enter text or a URL');
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/download';
+            form.style.display = 'none';
+
+            const inputs = [
+                { name: 'qr_data', value: qrData },
+                { name: 'dpi', value: dpi },
+                { name: 'fg_color', value: fgColor },
+                { name: 'bg_color', value: bgColor }
+            ];
+
+            inputs.forEach(input => {
+                const el = document.createElement('input');
+                el.type = 'hidden';
+                el.name = input.name;
+                el.value = input.value;
+                form.appendChild(el);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+        }
+
+        document.getElementById('dpi').addEventListener('input', function() {
+            console.log('DPI changed:', this.value);
+            document.getElementById('dpi_value').textContent = `${this.value} DPI`;
+            updateQRPreview();
+        });
+
+        const inputs = [
+            { id: 'qr_data', name: 'Text/URL' },
+            { id: 'fg_color', name: 'Foreground Color' },
+            { id: 'bg_color', name: 'Background Color' }
+        ];
+
+        inputs.forEach(input => {
+            const el = document.getElementById(input.id);
+            if (el) {
+                el.addEventListener('input', () => {
+                    console.log(`${input.name} changed:`, el.value);
+                    updateQRPreview();
+                });
+            } else {
+                console.error(`${input.name} input not found`);
+            }
+        });
+    </script>
+</body>
+</html>
