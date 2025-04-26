@@ -10,3 +10,14 @@ A simple Flask-based web application that generates QR codes for Mehdi's Cafe. U
 - Download the QR code as a PNG file.
 
 ## Directory Structure
+qr-code-generator/
+├── flask_app.py         # Flask application
+├── requirements.txt     # Python dependencies
+├── static/
+│   ├── image/
+│   │   └── image.png    # Image for Mehdi's Cafe
+│   └── service-worker.js # Service worker for caching
+└── templates/
+└── index.html       # HTML template for the app
+
+   
